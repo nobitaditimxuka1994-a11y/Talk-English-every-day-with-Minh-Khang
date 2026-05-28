@@ -1,80 +1,57 @@
 import streamlit as st
-import streamlit as st
 import google.generativeai as genai
 
-# 1. Cấu hình AI (AIzaSyCuPAHLEjbYVJxIq3FJr5IiMFhbTbgIIjs)
-genai.configure(api_key="THAY_API_KEY_CUA_BAN_TAI_DAY")
+# 1. Cấu hình AI với API Key thực tế của bạn
+genai.configure(api_key="AIzaSyCuPAHLEjbYVJxIq3FJr5IiMFhbTbgIIjs")
 model = genai.GenerativeModel('gemini-1.5-flash')
 
+# 2. Cấu hình giao diện (Chỉ gọi duy nhất 1 lần tại đây)
 st.set_page_config(page_title="AI English Teacher", page_icon="🤖")
 st.title("🤖 AI English Teacher")
+st.markdown("Talk to me all day to improve your English! I will correct your grammar and speak to you.")
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-if prompt := st.chat_input("Talk to me in English..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        # Yêu cầu AI đóng vai giáo viên tiếng Anh
-        full_prompt = f"You are a friendly English teacher. Correct the user's grammar if it's wrong, then reply to their message in English: {prompt}"
-        
-        response = model.generate_content(full_prompt)
-        ai_reply = response.text
-        
-        st.markdown(ai_reply)
-    
-    st.session_state.messages.append({"role": "assistant", "content": ai_reply})
-
-
-# Cấu hình giao diện
-st.set_page_config(page_title="English Chat AI", page_icon="🗣️")
-
-st.title("🗣️ English Practice Partner")
-st.markdown("Talk to me all day to improve your English!")
-
-# Khởi tạo lịch sử chat
+# 3. Khởi tạo lịch sử chat ban đầu nếu chưa có
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Hello! I'm your English teacher. How can I help you today?"}
+        {"role": "assistant", "content": "Hello! I'm your English teacher. Let's talk about anything you like!"}
     ]
 
-# Hiển thị các tin nhắn cũ
+# 4. Hiển thị lại toàn bộ các tin nhắn cũ lên màn hình
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Ô nhập liệu cho người dùng
-if prompt := st.chat_input("Type your English sentence here..."):
-    # Thêm tin nhắn của bạn vào lịch sử
+# 5. Xử lý khi người dùng nhập câu chat và nhấn Gửi
+if prompt := st.chat_input("Talk to me in English..."):
+    # Thêm và hiển thị tin nhắn của người dùng
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # AI phản hồi (Tạm thời là phản hồi tự động, rất nhẹ)
+    # Gọi AI phản hồi thực tế
     with st.chat_message("assistant"):
-        full_response = f"That's great! You said: '{prompt}'. Keep going, you're doing well!"
-        st.markdown(full_response)
-    
-    # Lưu phản hồi của AI
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
-    # Đoạn code giúp trình duyệt tự động đọc câu trả lời của AI
-if st.session_state.messages and st.session_state.messages[-1]["role"] == "assistant":
-    last_reply = st.session_state.messages[-1]["content"].replace("'", "\\'")
-    st.components.v1.html(
-        f"""
-        <script>
-        var msg = new SpeechSynthesisUtterance('{last_reply}');
-        msg.lang = 'en-US';
-        window.speechSynthesis.speak(msg);
-        </script>
-        """,
-        height=0,
-    )
-
+        try:
+            # Gửi Prompt chuẩn dặn dò AI sửa lỗi ngữ pháp
+            full_prompt = f"You are a friendly English teacher. Correct the user's grammar if it's wrong, then reply to their message in English: {prompt}"
+            
+            response = model.generate_content(full_prompt)
+            ai_reply = response.text
+            
+            st.markdown(ai_reply)
+            
+            # Lưu câu trả lời của AI vào bộ nhớ lịch sử
+            st.session_state.messages.append({"role": "assistant", "content": ai_reply})
+            
+            # Kích hoạt tính năng đọc âm thanh tiếng Anh qua trình duyệt điện thoại
+            st.components.v1.html(
+                f"""
+                <script>
+                var msg = new SpeechSynthesisUtterance('{ai_reply.replace("'", "\\'").replace("\n", " ")}');
+                msg.lang = 'en-US';
+                window.speechSynthesis.speak(msg);
+                </script>
+                """,
+                height=0,
+            )
+        except Exception as e:
+            st.error(f"Something went wrong with AI: {str(e)}")
