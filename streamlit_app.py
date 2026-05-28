@@ -1,56 +1,50 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. Cấu hình AI với API Key của bạn
+# 1. Cấu hình API
 genai.configure(api_key="AIzaSyCuPAHLEjbYVJxIq3FJr5IiMFhbTbgIIjs")
 
-# SỬA Ở ĐÂY: Thêm tiền tố models/ để tránh lỗi 404 trên Streamlit Cloud
-model = genai.GenerativeModel('models/gemini-1.5-flash')
+# SỬA: Thử dùng 'gemini-pro' để có độ ổn định cao nhất nếu flash bị 404
+try:
+    model = genai.GenerativeModel('gemini-pro')
+except:
+    model = genai.GenerativeModel('models/gemini-pro')
 
-# 2. Cấu hình giao diện
+# 2. Giao diện
 st.set_page_config(page_title="AI English Teacher", page_icon="🤖")
 st.title("🤖 AI English Teacher")
-st.markdown("Talk to me all day to improve your English! I will correct your grammar and speak to you.")
 
-# 3. Khởi tạo lịch sử chat
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Hello! I'm your English teacher. Let's talk about anything you like!"}
+        {"role": "assistant", "content": "Hello! I'm your teacher. Let's talk!"}
     ]
 
-# 4. Hiển thị lại toàn bộ các tin nhắn cũ lên màn hình
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 5. Xử lý khi người dùng nhập câu chat và nhấn Gửi
-if prompt := st.chat_input("Talk to me in English..."):
+if prompt := st.chat_input("Type here..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Gọi AI phản hồi thực tế
     with st.chat_message("assistant"):
         try:
-            full_prompt = f"You are a friendly English teacher. Correct the user's grammar if it's wrong, then reply to their message in English: {prompt}"
-            
-            response = model.generate_content(full_prompt)
+            # Gửi tin nhắn cho AI
+            response = model.generate_content(f"You are an English teacher. Correct and reply: {prompt}")
             ai_reply = response.text
-            
             st.markdown(ai_reply)
-            
             st.session_state.messages.append({"role": "assistant", "content": ai_reply})
             
-            # Tính năng phát âm qua trình duyệt điện thoại
+            # Đọc thành tiếng
             st.components.v1.html(
-                f"""
-                <script>
-                var msg = new SpeechSynthesisUtterance('{ai_reply.replace("'", "\\'").replace("\n", " ")}');
+                f"""<script>
+                var msg = new SpeechSynthesisUtterance('{ai_reply.replace("'", "\\'")}');
                 msg.lang = 'en-US';
                 window.speechSynthesis.speak(msg);
-                </script>
-                """,
-                height=0,
+                </script>""", height=0
             )
         except Exception as e:
-            st.error(f"Something went wrong with AI: {str(e)}")
+            # Nếu vẫn lỗi 404, app sẽ hướng dẫn bạn cách khắc phục cuối cùng
+            st.error(f"Lỗi kết nối: {str(e)}")
+            st.info("Mẹo: Hãy kiểm tra file requirements.txt đã có 'google-generativeai>=0.5.0' chưa nhé!")
