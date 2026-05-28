@@ -1,76 +1,33 @@
-import requests
-from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
-from kivy.uix.button import Button
-from kivy.core.window import Window
+import streamlit as st
 
-# Cấu hình màu sắc giao diện
-Window.clearcolor = (0.95, 0.95, 0.95, 1)
+# Cấu hình giao diện
+st.set_page_config(page_title="English Chat AI", page_icon="🗣️")
 
-class ChatApp(App):
-    def build(self):
-        self.title = "English Daily Chat"
-        
-        # Layout chính
-        self.main_layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
+st.title("🗣️ English Practice Partner")
+st.markdown("Talk to me all day to improve your English!")
 
-        # Vùng hiển thị nội dung chat
-        self.scroll_view = ScrollView(size_hint=(1, 0.8))
-        self.chat_history = Label(
-            text="[color=008080][b]AI:[/b] Hello! Let's practice English together![/color]\n",
-            markup=True,
-            size_hint_y=None,
-            halign='left',
-            valign='top',
-            color=(0, 0, 0, 1)
-        )
-        self.chat_history.bind(texture_size=self.chat_history.setter('size'))
-        self.scroll_view.add_widget(self.chat_history)
-        self.main_layout.add_widget(self.scroll_view)
+# Khởi tạo lịch sử chat
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", "content": "Hello! I'm your English teacher. How can I help you today?"}
+    ]
 
-        # Vùng nhập liệu
-        input_layout = BoxLayout(size_hint=(1, 0.2), spacing=10)
-        self.user_input = TextInput(
-            hint_text="Type your English here...",
-            multiline=False,
-            padding_y=(10, 10)
-        )
-        
-        send_button = Button(
-            text="Send",
-            size_hint=(0.3, 1),
-            background_color=(0, 0.5, 0.5, 1),
-            color=(1, 1, 1, 1)
-        )
-        send_button.bind(on_press=self.send_message)
+# Hiển thị các tin nhắn cũ
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-        input_layout.add_widget(self.user_input)
-        input_layout.add_widget(send_button)
-        self.main_layout.add_widget(input_layout)
+# Ô nhập liệu cho người dùng
+if prompt := st.chat_input("Type your English sentence here..."):
+    # Thêm tin nhắn của bạn vào lịch sử
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-        return self.main_layout
-
-    def send_message(self, instance):
-        message = self.user_input.text.strip()
-        if message:
-            # Hiển thị tin nhắn người dùng
-            self.chat_history.text += f"\n[b]You:[/b] {message}\n"
-            self.user_input.text = ""
-            
-            # Giả lập phản hồi từ AI (Bạn có thể thay thế bằng API thực tế)
-            self.get_ai_response(message)
-
-    def get_ai_response(self, user_text):
-        # Đây là nơi tích hợp OpenAI/Gemini API trong tương lai
-        # Hiện tại app sẽ phản hồi tự động để bạn kiểm tra giao diện
-        ai_reply = f"AI: I understand you said '{user_text}'. Your English is improving!"
-        self.chat_history.text += f"[color=008080]{ai_reply}[/color]\n"
-        
-        # Tự động cuộn xuống dưới cùng
-        self.scroll_view.scroll_y = 0
-
-if __name__ == '__main__':
-    ChatApp().run()
+    # AI phản hồi (Tạm thời là phản hồi tự động, rất nhẹ)
+    with st.chat_message("assistant"):
+        full_response = f"That's great! You said: '{prompt}'. Keep going, you're doing well!"
+        st.markdown(full_response)
+    
+    # Lưu phản hồi của AI
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
