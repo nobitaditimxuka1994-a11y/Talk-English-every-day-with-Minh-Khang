@@ -3,8 +3,7 @@ import google.generativeai as genai
 
 # 1. Cấu hình AI với API Key thực tế của bạn
 genai.configure(api_key="AIzaSyCuPAHLEjbYVJxIq3FJr5IiMFhbTbgIIjs")
-model = genai.GenerativeModel('gemini-1.5-flash')
-
+model = genai.GenerativeModel('models/gemini-1.5-flash')
 # 2. Cấu hình giao diện (Chỉ gọi duy nhất 1 lần tại đây)
 st.set_page_config(page_title="AI English Teacher", page_icon="🤖")
 st.title("🤖 AI English Teacher")
