@@ -15,7 +15,7 @@ except Exception:
 def load_model():
     # Cấu hình vai trò giáo viên ngay từ đầu
     return genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="models/gemini-1.5-flash",
         system_instruction="You are a friendly and helpful English teacher. Correct the student's grammar mistakes if any, then reply to their message in English."
     )
 
