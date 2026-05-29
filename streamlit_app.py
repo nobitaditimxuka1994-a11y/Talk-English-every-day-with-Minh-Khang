@@ -11,13 +11,16 @@ except Exception:
     st.stop()
 
 # 2. Khởi tạo Model (Sử dụng dòng 1.5 mới nhất)
+# Tìm đoạn khởi tạo model và sửa thành thế này:
 @st.cache_resource
 def load_model():
-    # Cấu hình vai trò giáo viên ngay từ đầu
     return genai.GenerativeModel(
-        model_name="models/gemini-1.5-flash",
+        model_name="gemini-1.5-flash", # Bỏ chữ models/ nếu đã thêm trước đó
         system_instruction="You are a friendly and helpful English teacher. Correct the student's grammar mistakes if any, then reply to their message in English."
     )
+
+# Thêm dòng này ngay sau khi genai.configure để ép phiên bản (nếu cần)
+# genai.configure(api_key=API_KEY, transport='rest') 
 
 model = load_model()
 
