@@ -17,7 +17,7 @@ genai.configure(api_key=API_KEY)
 def load_model():
     try:
         return genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name="gemini-1.0-pro"
             system_instruction="You are a friendly and helpful English teacher. Correct the student's grammar mistakes if any, then reply to their message in English."
         )
     except Exception as e:
